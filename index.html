@@ -1,126 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"
-    />
-    <title>Touch Test</title>
-    <style>
-      body,
-      html {
-        height: 100%;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: Arial, sans-serif;
-        overflow: hidden; /* Prevent scrolling */
-        touch-action: none; /* Disable default touch behaviors */
-      }
-      #touch-area {
-        width: 80%;
-        height: 80%;
-        background: #e0e0e0;
-        border: 2px solid #000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        touch-action: none; /* Prevent double-tap zoom */
-      }
-      #output {
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        padding: 10px;
-        border-top: 2px solid #333;
-        background-color: #f5f5f5;
-      }
-      .log-entry {
-        border-bottom: 1px solid #ddd;
-        padding: 5px;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="touch-area">
-      <div id="output">Touch the screen to see touch metrics here...</div>
-    </div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <title>Touch Test 1.0</title>
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      overflow: hidden; /* Prevent scrolling */
+      touch-action: none; /* Disable default touch behaviors */
+    }
+    #touch-area {
+      width: 80%;
+      height: 80%;
+      background: #e0e0e0;
+      border: 2px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      touch-action: none; /* Prevent double-tap zoom */
+    }
+    #output {
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      padding: 10px;
+      border-top: 2px solid #333;
+      background-color: #f5f5f5;
+    }
+    .log-entry {
+      border-bottom: 1px solid #ddd;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="touch-area">
+    <div id="output">Touch the screen to see touch metrics here...</div>
+  </div>
 
-    <script>
-      const touchArea = document.getElementById("touch-area");
-      const output = document.getElementById("output");
+  <script>
+    const touchArea = document.getElementById('touch-area');
+    const output = document.getElementById('output');
 
-      function displayMetrics(eventName, touch) {
-        const touchData = `
+    // Function to display the captured metrics
+    function displayMetrics(eventName, touch) {
+      // Directly access touch.force
+      const touchForce = touch.force !== undefined ? touch.force : "Not Supported";
+      
+      // Log the support status and values
+      const touchData = `
         <div class="log-entry">
           <strong>${eventName} Event</strong><br>
-          Pressure: ${touch.force !== undefined ? touch.force : "Not Supported"}<br>
+          Pressure: ${touchForce}<br>
           Radius X: ${touch.radiusX !== undefined ? touch.radiusX : "Not Supported"}<br>
           Radius Y: ${touch.radiusY !== undefined ? touch.radiusY : "Not Supported"}<br>
-          Rotation Angle: ${
-            touch.rotationAngle !== undefined ? touch.rotationAngle : "Not Supported"
-          }<br>
+          Rotation Angle: ${touch.rotationAngle !== undefined ? touch.rotationAngle : "Not Supported"}<br>
           Timestamp: ${new Date().toISOString()}<br>
         </div>
       `;
-        output.innerHTML = touchData + output.innerHTML;
+
+      output.innerHTML = touchData + output.innerHTML;
+    }
+
+    // Add event listeners for touch events
+    touchArea.addEventListener('touchstart', (event) => {
+      event.preventDefault(); // Prevent default touch behaviors
+      output.innerHTML = "<div class='log-entry'><strong>Touch Start Detected</strong></div>" + output.innerHTML;
+      for (const touch of event.changedTouches) {
+        displayMetrics('Touch Start', touch);
       }
+    });
 
-      // Add event listeners for touch events and log the events
-      touchArea.addEventListener("touchstart", (event) => {
-        event.preventDefault(); // Prevent default touch behaviors
-        output.innerHTML =
-          "<div class='log-entry'><strong>Touch Start Detected</strong></div>" + output.innerHTML;
-        for (const touch of event.changedTouches) {
-          displayMetrics("Touch Start", touch);
-        }
-      });
+    touchArea.addEventListener('touchmove', (event) => {
+      event.preventDefault(); // Prevent default scrolling behavior
+      output.innerHTML = "<div class='log-entry'><strong>Touch Move Detected</strong></div>" + output.innerHTML;
+      for (const touch of event.changedTouches) {
+        displayMetrics('Touch Move', touch);
+      }
+    });
 
-      touchArea.addEventListener("touchmove", (event) => {
-        event.preventDefault(); // Prevent default scrolling behavior
-        output.innerHTML =
-          "<div class='log-entry'><strong>Touch Move Detected</strong></div>" + output.innerHTML;
-        for (const touch of event.changedTouches) {
-          displayMetrics("Touch Move", touch);
-        }
-      });
+    touchArea.addEventListener('touchend', (event) => {
+      event.preventDefault(); // Prevent default behaviors on touch end
+      output.innerHTML = "<div class='log-entry'><strong>Touch End Detected</strong></div>" + output.innerHTML;
+      for (const touch of event.changedTouches) {
+        displayMetrics('Touch End', touch);
+      }
+    });
 
-      touchArea.addEventListener("touchend", (event) => {
-        event.preventDefault(); // Prevent default behaviors on touch end
-        output.innerHTML =
-          "<div class='log-entry'><strong>Touch End Detected</strong></div>" + output.innerHTML;
-        for (const touch of event.changedTouches) {
-          displayMetrics("Touch End", touch);
-        }
-      });
+    // Prevent pull-to-refresh by blocking overscroll
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault(); // Prevent pinch-to-zoom
+      }
+    }, { passive: false });
 
-      // Prevent pull-to-refresh by blocking overscroll
-      document.addEventListener(
-        "touchmove",
-        function (event) {
-          if (event.touches.length > 1) {
-            event.preventDefault(); // Prevent pinch-to-zoom
-          }
-        },
-        { passive: false }
-      );
-
-      // Prevent double-tap zoom by capturing double clicks and doing nothing
-      let lastTouchEnd = 0;
-      document.addEventListener(
-        "touchend",
-        function (event) {
-          const now = new Date().getTime();
-          if (now - lastTouchEnd <= 300) {
-            event.preventDefault(); // Prevent double-tap zoom
-          }
-          lastTouchEnd = now;
-        },
-        false
-      );
-    </script>
-  </body>
+    // Prevent double-tap zoom by capturing double clicks and doing nothing
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = new Date().getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault(); // Prevent double-tap zoom
+      }
+      lastTouchEnd = now;
+    }, false);
+  </script>
+</body>
 </html>
